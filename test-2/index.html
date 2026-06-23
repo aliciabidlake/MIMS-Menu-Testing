@@ -105,8 +105,9 @@
       }
     }
 
-    function navigate(title) { content.innerHTML = stubHTML(title); }
-    content.innerHTML = homeHTML();
+    function navigate(title) { content.innerHTML = dataPageHTML(title); }
+    // Landing matches the Figma B default: the "Areas" search page.
+    content.innerHTML = dataPageHTML("Areas");
   </script>
 </body>
 </html>

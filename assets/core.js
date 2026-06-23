@@ -62,6 +62,35 @@ function footerHTML() {
 function stubHTML(title) {
   return `<h1 class="stub-title">${escapeHTML(title)}</h1><div class="stub-container"></div>`;
 }
+
+/* ---- data page (Areas-style search + results table) -----------------------
+   Mirrors the Figma content frames: a subtitle, a filter bar (text fields +
+   Reset/Search) and a results table header. Used by B as its landing page,
+   for tab navigation and inside the manager modal. */
+function dataPageHTML(title, opts) {
+  opts = opts || {};
+  const subtitle = opts.subtitle || "Search for an existing shipment";
+  const filters = opts.filters || ["Shipment reference search", "Consignee", "Consignor", "Date to (UTC)", "Date from (UTC)"];
+  const columns = opts.columns || ["Reference", "Consigner code", "Consignor", "Consignee code", "Consignee", "Incoterm", "Received a (UTC)", "Origin", "Destination", "Weight (kg)", "TEU", "CO2e"];
+  const fields = filters.map((f, i) => {
+    const lead = i === 0 ? SVG.search : "";
+    return `<div class="filter-field" style="flex:${i === 0 ? "1.4" : "1"} 1 ${i === 0 ? 220 : 160}px">${lead}<input type="text" placeholder="${escapeHTML(f)}" aria-label="${escapeHTML(f)}"></div>`;
+  }).join("");
+  const ths = columns.map(c => `<div class="data-th">${escapeHTML(c)}</div>`).join("");
+  return `<div class="data-page">
+      <h1 class="data-title">${escapeHTML(title)}</h1>
+      <div class="data-subtitle">${escapeHTML(subtitle)}</div>
+      <div class="filter-bar">
+        ${fields}
+        <button class="btn btn-text">Reset</button>
+        <button class="btn btn-primary">Search</button>
+      </div>
+      <div class="data-table">
+        <div class="data-thead">${ths}</div>
+        <div class="data-tbody"></div>
+      </div>
+    </div>`;
+}
 function homeHTML() {
   return `<div class="stub-home"><div>
       <div style="font-size:20px;font-weight:500;color:var(--text-primary)">MIMS</div>
@@ -119,7 +148,7 @@ function openModal(manager, activeCat, activeItem) {
   scrim.classList.add("is-open");
 }
 function setModalContent(manager, cat, item, rail, btn) {
-  document.getElementById("modal-content").innerHTML = stubHTML(item);
+  document.getElementById("modal-content").innerHTML = dataPageHTML(item);
   if (rail && btn) {
     rail.querySelectorAll(".menu-item").forEach(x => x.classList.remove("is-active"));
     btn.classList.add("is-active");

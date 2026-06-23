@@ -42,6 +42,7 @@
     const drawerScrim = document.getElementById("drawer-scrim");
     const flyout = document.getElementById("flyout");
     let currentManagerId = null;
+    let currentItem = null;
 
     /* ---------- local contextual rail ---------- */
     function renderLocalRail(manager, activeItem) {
@@ -55,6 +56,7 @@
         manager.tabs.forEach(tab => sidenav.appendChild(localItem(tab, manager, activeItem)));
         return;
       }
+      const anyActive = manager.categories.some(c => c.items.includes(activeItem));
       manager.categories.forEach((cat, idx) => {
         const catBtn = document.createElement("button");
         catBtn.className = "sidenav-cat";
@@ -62,7 +64,8 @@
         const items = document.createElement("div");
         items.className = "sidenav-items";
         const hasActive = cat.items.includes(activeItem);
-        if (idx === 0 || hasActive) { catBtn.classList.add("is-open"); items.classList.add("is-open"); }
+        // Open the category that holds the active item; if none is active, open the first.
+        if (hasActive || (!anyActive && idx === 0)) { catBtn.classList.add("is-open"); items.classList.add("is-open"); }
         cat.items.forEach(item => items.appendChild(localItem(item, manager, activeItem)));
         catBtn.addEventListener("click", () => {
           catBtn.classList.toggle("is-open");
@@ -83,6 +86,7 @@
     /* ---------- navigation ---------- */
     function selectItem(manager, item) {
       currentManagerId = manager.id;
+      currentItem = item;
       renderLocalRail(manager, item);
       content.innerHTML = stubHTML(item);
       closeDrawer();
@@ -107,9 +111,12 @@
             cats.appendChild(t);
           });
         } else {
+          const activeCat = m.id === currentManagerId
+            ? m.categories.find(cat => cat.items.includes(currentItem))
+            : null;
           m.categories.forEach(cat => {
             const c = document.createElement("button");
-            c.className = "drawer-cat";
+            c.className = "drawer-cat" + (cat === activeCat ? " is-active" : "");
             c.innerHTML = `<span class="dot"></span><span>${escapeHTML(cat.name)}</span> ${SVG.chevRight}`;
             c.addEventListener("mouseenter", () => showFlyout(c, m, cat));
             c.addEventListener("click", e => { e.stopPropagation(); showFlyout(c, m, cat); });
@@ -129,28 +136,41 @@
       });
     }
 
+    /* The flyout opens to the right of the drawer with a small gap (matching the
+       Figma spec). A short close-delay lets the pointer travel across that gap
+       and into the flyout without it vanishing — so its items stay clickable. */
+    let hideTimer = null;
+    function cancelHide() { if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; } }
+    function scheduleHide() { cancelHide(); hideTimer = setTimeout(hideFlyout, 220); }
+
     function showFlyout(anchor, manager, cat) {
+      cancelHide();
       drawer.querySelectorAll(".drawer-cat").forEach(x => x.classList.remove("is-hover"));
       anchor.classList.add("is-hover");
       flyout.innerHTML = "";
       cat.items.forEach(item => {
+        const isActive = manager.id === currentManagerId && item === currentItem;
         const b = document.createElement("button");
-        b.className = "menu-item";
+        b.className = "menu-item" + (isActive ? " is-active" : "");
         b.textContent = item;
         b.addEventListener("click", () => selectItem(manager, item));
         flyout.appendChild(b);
       });
       const r = anchor.getBoundingClientRect();
-      flyout.style.left = (drawer.getBoundingClientRect().right - 1) + "px";
+      flyout.style.left = (drawer.getBoundingClientRect().right + 8) + "px";
       flyout.style.top = r.top + "px";
       flyout.classList.add("is-open");
     }
     function hideFlyout() {
+      cancelHide();
       flyout.classList.remove("is-open");
       drawer.querySelectorAll(".drawer-cat").forEach(x => x.classList.remove("is-hover"));
     }
-    flyout.addEventListener("mouseleave", hideFlyout);
-    drawer.addEventListener("mouseleave", e => { if (e.relatedTarget !== flyout) hideFlyout(); });
+    // Keep the flyout alive while the pointer is over it; close shortly after leaving either surface.
+    flyout.addEventListener("mouseenter", cancelHide);
+    flyout.addEventListener("mouseleave", scheduleHide);
+    drawer.addEventListener("mouseleave", scheduleHide);
+    drawer.addEventListener("mouseenter", cancelHide);
 
     function openDrawer() { buildDrawer(); drawer.style.display = "block"; drawer.classList.add("is-open"); drawerScrim.classList.add("is-open"); }
     function closeDrawer() { drawer.classList.remove("is-open"); drawer.style.display = "none"; drawerScrim.classList.remove("is-open"); hideFlyout(); }
@@ -160,9 +180,10 @@
     drawerScrim.addEventListener("click", closeDrawer);
     document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
 
-    /* ---------- landing ---------- */
-    sidenav.innerHTML = `<div class="sidenav-title" style="color:var(--text-secondary);font-size:var(--fs-14);font-weight:400;line-height:1.5">Open the <strong>menu</strong> (top-left) to choose a manager.</div>`;
-    content.innerHTML = homeHTML();
+    /* ---------- landing ----------
+       Match the Figma default state: Configuration Manager rail with "Areas"
+       selected, rather than an empty placeholder. */
+    selectItem(iaManager("configuration"), "Areas");
   </script>
 </body>
 </html>

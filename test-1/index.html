@@ -34,6 +34,7 @@
     const content = document.getElementById("content");
     let activeManagerId = null;
     let openMenuEl = null;
+    let currentItem = null;
 
     // top-nav managers
     const managers = document.createElement("div");
@@ -81,6 +82,7 @@
       m.categories.forEach(cat => {
         const b = document.createElement("button");
         b.className = "subbar-item";
+        b.dataset.cat = cat.name;
         b.innerHTML = `${escapeHTML(cat.name)} ${SVG.chevDown}`;
         b.addEventListener("click", e => {
           e.stopPropagation();
@@ -88,6 +90,17 @@
           openDropdown(b, cat);
         });
         subbar.appendChild(b);
+      });
+      highlightCurrentCategory();
+    }
+
+    // Mark the subbar category that holds the currently-open item (Figma's
+    // persistent "Warehouse Setup" highlight).
+    function highlightCurrentCategory() {
+      const mgr = activeManagerId ? iaManager(activeManagerId) : null;
+      subbar.querySelectorAll(".subbar-item").forEach(btn => {
+        const cat = mgr && mgr.categories ? mgr.categories.find(c => c.name === btn.dataset.cat) : null;
+        btn.classList.toggle("is-current", !!(cat && cat.items.includes(currentItem)));
       });
     }
 
@@ -101,7 +114,7 @@
       menu.style.zIndex = 50;
       cat.items.forEach(item => {
         const it = document.createElement("button");
-        it.className = "menu-item";
+        it.className = "menu-item" + (item === currentItem ? " is-active" : "");
         it.textContent = item;
         it.addEventListener("click", () => { navigate(item); closeDropdown(); });
         menu.appendChild(it);
@@ -125,10 +138,16 @@
       if (openMenuEl && !openMenuEl.contains(e.target) && !openMenuEl._anchor.contains(e.target)) closeDropdown();
     });
 
-    function navigate(title) { content.innerHTML = stubHTML(title); }
+    function navigate(title) {
+      currentItem = title;
+      content.innerHTML = dataPageHTML(title);
+      highlightCurrentCategory();
+    }
 
-    // landing
-    content.innerHTML = homeHTML();
+    // Landing matches the Figma A default: Configuration selected, Warehouse
+    // Setup as the current category, and the "Areas" search page in content.
+    selectManager("configuration");
+    navigate("Areas");
   </script>
 </body>
 </html>

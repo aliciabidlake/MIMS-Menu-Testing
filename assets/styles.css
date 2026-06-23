@@ -35,7 +35,7 @@
 
   /* metrics */
   --header-h: 64px;
-  --topstrip-h: 6px;
+  --topstrip-h: 8px;
   --subbar-h: 44px;
   --content-pad: 24px;
 }
@@ -87,7 +87,7 @@ a { color: inherit; }
 
 .mims-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px; user-select: none; }
 .mims-logo { width: 34px; height: 34px; display: block; }
-.mims-wordmark { font-size: 26px; font-weight: 700; letter-spacing: .5px; color: #1a1a1a; }
+.mims-wordmark { font-size: 28px; font-weight: 800; letter-spacing: .5px; color: #1a1a1a; }
 
 .mims-nav { display: flex; align-items: stretch; height: 100%; margin-left: 8px; flex: 1; min-width: 0; }
 
@@ -95,21 +95,21 @@ a { color: inherit; }
 .mims-managers { display: flex; align-items: stretch; height: 100%; }
 .mims-manager {
   display: inline-flex; align-items: center; gap: 2px;
-  height: 100%; padding: 0 5px;
+  height: 100%; padding: 0 12px;
   border: 0; background: transparent; cursor: pointer;
-  font-size: var(--fs-14); font-weight: 500; color: var(--text-primary);
-  white-space: nowrap;
+  font-size: var(--fs-14); font-weight: 400; color: var(--text-primary);
+  letter-spacing: .17px; white-space: nowrap;
 }
-.mims-manager:hover { background: rgba(0,0,0,.04); }
-.mims-manager.is-active { background: rgba(0,0,0,.06); }
-.mims-manager .chev { width: 16px; height: 16px; opacity: .7; }
+.mims-manager:hover { background: var(--hover); }
+.mims-manager.is-active { background: var(--selected); }
+.mims-manager .chev { width: 18px; height: 18px; opacity: .55; }
 
 /* header right side */
-.mims-header-right { margin-left: auto; display: flex; align-items: center; gap: 2px; flex: none; padding-left: 6px; }
+.mims-header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; padding-left: 12px; }
 .mims-search {
   display: flex; align-items: center; gap: 8px;
-  width: 150px; max-width: 14vw;
-  height: 40px; padding: 0 10px;
+  width: 349px; max-width: 28vw;
+  height: 40px; padding: 0 12px;
   border: 1px solid var(--input-border); border-radius: var(--radius);
   color: var(--text-secondary); background: var(--bg-surface);
 }
@@ -198,9 +198,11 @@ a { color: inherit; }
   text-transform: uppercase; color: var(--text-secondary);
   white-space: nowrap;
 }
-.subbar-item:hover { background: rgba(0,0,0,.04); }
-.subbar-item.is-open { background: rgba(0,0,0,.06); color: var(--text-primary); }
-.subbar-item .chev { width: 16px; height: 16px; }
+.subbar-item:hover { background: var(--hover); }
+.subbar-item.is-current { background: var(--hover); color: var(--text-primary); }
+.subbar-item.is-open { background: var(--selected); color: var(--text-primary); }
+.subbar-item .chev { width: 16px; height: 16px; transition: transform .15s; }
+.subbar-item.is-open .chev { transform: rotate(180deg); }
 
 /* tab row variant (Operations / Pulse) */
 .subbar.is-tabs { padding: 0 16px; }
@@ -275,6 +277,37 @@ a { color: inherit; }
 .btn-text { background: transparent; color: var(--primary); padding: 0 12px; }
 .btn-text:hover { background: var(--hover); }
 
+/* ---- data page (Areas-style search + results table; B landing + modal) ---- */
+.data-page { display: flex; flex-direction: column; gap: 0; }
+.data-title { font-size: var(--fs-28); font-weight: 500; margin: 4px 0 4px; }
+.data-subtitle { font-size: var(--fs-14); color: var(--text-primary); margin: 0 0 16px; }
+.filter-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.filter-field {
+  display: flex; align-items: center; gap: 8px;
+  height: 40px; padding: 0 12px; min-width: 0;
+  border: 1px solid var(--input-border); border-radius: var(--radius);
+  background: var(--bg-surface); color: var(--text-secondary);
+}
+.filter-field svg { flex: none; opacity: .7; }
+.filter-field input {
+  border: 0; outline: 0; background: transparent;
+  font: inherit; font-size: var(--fs-14); color: var(--text-primary);
+  width: 100%; min-width: 0;
+}
+.filter-field input::placeholder { color: var(--text-secondary); }
+.filter-bar .btn { white-space: nowrap; }
+.data-table {
+  border: 1px solid var(--divider); border-radius: var(--radius);
+  background: var(--bg-surface); overflow-x: auto; flex: 1; min-height: 0;
+}
+.data-thead { display: flex; min-width: max-content; border-bottom: 1px solid var(--divider); background: var(--hover); }
+.data-th {
+  flex: 1 0 130px; padding: 16px 16px;
+  font-size: var(--fs-14); font-weight: 500; color: var(--text-primary);
+  white-space: nowrap;
+}
+.data-tbody { min-height: 360px; }
+
 /* ---- side nav (C) --------------------------------------------------------- */
 .sidenav {
   width: 280px; flex: none;
@@ -306,24 +339,29 @@ a { color: inherit; }
 
 /* ---- overarching drawer (C) ---------------------------------------------- */
 .drawer-scrim {
-  position: fixed; inset: 0; top: 0; background: var(--scrim);
+  position: fixed; left: 0; right: 0; bottom: 0;
+  top: calc(var(--topstrip-h) + var(--header-h)); /* keep the header bright */
+  background: var(--scrim);
   display: none; z-index: 90;
 }
 .drawer-scrim.is-open { display: block; }
 .drawer {
   position: fixed; top: calc(var(--topstrip-h) + var(--header-h));
-  left: 0; bottom: 0; width: 320px;
+  left: 0; bottom: 0; width: 325px;
   background: var(--bg-surface);
   border-right: 1px solid var(--divider);
-  box-shadow: var(--shadow-menu);
+  /* Right-edge-only shadow: blur gated by equal negative spread so it can't
+     bleed up over the header at the top seam. */
+  box-shadow: 8px 0 8px -8px rgba(0, 0, 0, 0.35);
   z-index: 91; overflow: auto; padding: 8px 0;
 }
 .drawer-manager {
   display: flex; align-items: center; gap: 12px; width: 100%;
   border: 0; background: transparent; cursor: pointer;
   font-size: var(--fs-16); font-weight: 500; color: var(--text-primary);
-  padding: 12px 16px;
+  padding: 12px 16px; text-align: left;
 }
+.drawer-manager > span { flex: 1; }
 .drawer-manager:hover { background: rgba(0,0,0,.04); }
 .drawer-manager.is-active { color: var(--primary); }
 .drawer-manager .mico { width: 22px; height: 22px; opacity: .8; flex: none; }
@@ -337,21 +375,39 @@ a { color: inherit; }
   border: 0; background: transparent; cursor: pointer;
   font-size: var(--fs-12); font-weight: 500; letter-spacing: .6px;
   text-transform: uppercase; color: var(--text-secondary);
-  padding: 11px 16px 11px 24px; position: relative;
+  padding: 11px 16px 11px 24px; position: relative; text-align: left;
 }
 .drawer-cat:hover, .drawer-cat.is-hover { background: rgba(0,0,0,.04); }
+.drawer-cat.is-active { background: var(--selected); }
 .drawer-cat .chev { margin-left: auto; width: 16px; height: 16px; }
 .drawer-cat .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); margin-right: 8px; opacity: 0; }
-.drawer-cat.is-hover .dot { opacity: 1; }
+.drawer-cat.is-hover .dot, .drawer-cat.is-active .dot { opacity: 1; }
 
 /* flyout from a drawer category */
 .flyout {
   position: fixed; z-index: 92;
-  min-width: 240px;
+  min-width: 245px;
+  max-height: calc(100vh - var(--topstrip-h) - var(--header-h) - 24px);
+  overflow: auto;
   display: none;
 }
 .flyout.is-open { display: block; }
 
+/* The nav is laid out for the 1920 Figma width; tighten spacing on smaller
+   viewports so the managers don't collide with the Quick links search. */
+@media (max-width: 1680px) {
+  .mims-manager { padding: 0 8px; }
+  .mims-search { width: 300px; }
+}
+@media (max-width: 1480px) {
+  .mims-manager { padding: 0 5px; gap: 0; }
+  .mims-manager .chev { width: 14px; height: 14px; }
+  .mims-search { width: 210px; }
+}
+@media (max-width: 1280px) {
+  .mims-manager { padding: 0 4px; font-size: 13px; }
+  .mims-search { width: 180px; }
+}
 @media (max-width: 900px) {
-  .mims-search { width: 200px; }
+  .mims-search { width: 160px; }
 }
