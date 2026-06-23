@@ -33,49 +33,102 @@
     const subbar = document.getElementById("subbar");
     const content = document.getElementById("content");
     let activeManagerId = null;
-    let openMenuEl = null;
     let currentItem = null;
+    let openMenuEl = null;    // open subbar-category dropdown
+    let subCloseTimer = null;
+    let openMega = null;      // open top-level mega menu
+    let megaTimer = null;
 
-    // top-nav managers
+    /* ---------- top-nav managers: hover mega menu (same structure as B) ----- */
     const managers = document.createElement("div");
     managers.className = "mims-managers";
     MIMS_IA.managers.forEach(m => {
+      const wrap = document.createElement("div");
+      wrap.style.position = "relative";
+      wrap.style.height = "100%";
+
       const b = document.createElement("button");
       b.className = "mims-manager";
       b.dataset.id = m.id;
       b.innerHTML = `${escapeHTML(m.name)} ${SVG.chevDown}`;
-      b.addEventListener("click", () => selectManager(m.id));
-      managers.appendChild(b);
+      wrap.appendChild(b);
+
+      const mega = document.createElement("div");
+      mega.className = "menu-surface mega";
+      if (m.type === "grouped") {
+        m.categories.forEach(cat => {
+          const g = document.createElement("div");
+          g.className = "mega-group";
+          g.innerHTML = `<div class="menu-cat-label">${escapeHTML(cat.name)}</div>`;
+          cat.items.forEach(item => {
+            const it = document.createElement("button");
+            it.className = "menu-item";
+            it.textContent = item;
+            it.addEventListener("click", () => goToItem(m, item));
+            g.appendChild(it);
+          });
+          mega.appendChild(g);
+        });
+      } else {
+        mega.style.columns = "1";
+        mega.style.minWidth = "260px";
+        m.tabs.forEach(tab => {
+          const it = document.createElement("button");
+          it.className = "menu-item";
+          it.textContent = tab;
+          it.addEventListener("click", () => goToItem(m, tab));
+          mega.appendChild(it);
+        });
+      }
+      wrap.appendChild(mega);
+
+      const open = () => { clearTimeout(megaTimer); openMegaMenu(b, mega); };
+      b.addEventListener("mouseenter", open);
+      b.addEventListener("click", open);
+      wrap.addEventListener("mouseenter", () => clearTimeout(megaTimer));
+      wrap.addEventListener("mouseleave", () => { megaTimer = setTimeout(closeMega, 160); });
+
+      managers.appendChild(wrap);
     });
     nav.appendChild(managers);
 
-    function selectManager(id) {
-      activeManagerId = id;
-      closeDropdown();
-      [...managers.children].forEach(c => c.classList.toggle("is-active", c.dataset.id === id));
-      renderSubbar(iaManager(id));
+    function openMegaMenu(btn, mega) {
+      if (openMega && openMega !== mega) closeMega();
+      mega.style.left = "0"; mega.style.right = "auto";
+      mega.classList.add("is-open");
+      const r = mega.getBoundingClientRect();
+      if (r.right > window.innerWidth - 8) { mega.style.left = "auto"; mega.style.right = "0"; }
+      openMega = mega;
+    }
+    function closeMega() {
+      if (openMega) { openMega.classList.remove("is-open"); openMega = null; }
     }
 
+    /* ---------- navigate to a page (drives the subbar context) -------------- */
+    function goToItem(manager, item) {
+      activeManagerId = manager.id;
+      currentItem = item;
+      closeMega();
+      closeDropdown();
+      managers.querySelectorAll(".mims-manager").forEach(btn => btn.classList.toggle("is-active", btn.dataset.id === manager.id));
+      renderSubbar(manager);
+      content.innerHTML = dataPageHTML(item);
+    }
+
+    /* ---------- persistent sub-category bar --------------------------------- */
     function renderSubbar(m) {
       subbar.innerHTML = "";
       subbar.style.display = "flex";
       subbar.classList.toggle("is-tabs", m.type === "tabs");
 
       if (m.type === "tabs") {
-        m.tabs.forEach((tab, i) => {
+        m.tabs.forEach(tab => {
           const b = document.createElement("button");
-          b.className = "subbar-item" + (i === 0 ? "" : "");
+          b.className = "subbar-item" + (tab === currentItem ? " is-active" : "");
           b.textContent = tab;
-          b.addEventListener("click", () => {
-            [...subbar.children].forEach(c => c.classList.remove("is-active"));
-            b.classList.add("is-active");
-            navigate(tab);
-          });
+          b.addEventListener("click", () => goToItem(m, tab));
           subbar.appendChild(b);
         });
-        // land on first tab
-        subbar.children[0].classList.add("is-active");
-        navigate(m.tabs[0]);
         return;
       }
 
@@ -84,6 +137,13 @@
         b.className = "subbar-item";
         b.dataset.cat = cat.name;
         b.innerHTML = `${escapeHTML(cat.name)} ${SVG.chevDown}`;
+        // Open the dropdown on hover (and click); a close-delay lets the pointer
+        // travel down into the menu without it disappearing.
+        b.addEventListener("mouseenter", () => {
+          cancelSubClose();
+          if (!(openMenuEl && openMenuEl._cat === cat.name)) openDropdown(b, cat);
+        });
+        b.addEventListener("mouseleave", scheduleSubClose);
         b.addEventListener("click", e => {
           e.stopPropagation();
           if (openMenuEl && openMenuEl._cat === cat.name) { closeDropdown(); return; }
@@ -104,6 +164,9 @@
       });
     }
 
+    function cancelSubClose() { if (subCloseTimer) { clearTimeout(subCloseTimer); subCloseTimer = null; } }
+    function scheduleSubClose() { cancelSubClose(); subCloseTimer = setTimeout(closeDropdown, 180); }
+
     function openDropdown(anchor, cat) {
       closeDropdown();
       anchor.classList.add("is-open");
@@ -112,11 +175,13 @@
       menu._cat = cat.name;
       menu.style.position = "absolute";
       menu.style.zIndex = 50;
+      menu.addEventListener("mouseenter", cancelSubClose);
+      menu.addEventListener("mouseleave", scheduleSubClose);
       cat.items.forEach(item => {
         const it = document.createElement("button");
         it.className = "menu-item" + (item === currentItem ? " is-active" : "");
         it.textContent = item;
-        it.addEventListener("click", () => { navigate(item); closeDropdown(); });
+        it.addEventListener("click", () => goToItem(iaManager(activeManagerId), item));
         menu.appendChild(it);
       });
       document.body.appendChild(menu);
@@ -128,6 +193,7 @@
       openMenuEl._anchor = anchor;
     }
     function closeDropdown() {
+      cancelSubClose();
       if (openMenuEl) {
         if (openMenuEl._anchor) openMenuEl._anchor.classList.remove("is-open");
         openMenuEl.remove();
@@ -136,18 +202,15 @@
     }
     document.addEventListener("click", e => {
       if (openMenuEl && !openMenuEl.contains(e.target) && !openMenuEl._anchor.contains(e.target)) closeDropdown();
+      if (openMega && !openMega.parentElement.contains(e.target)) closeMega();
     });
 
-    function navigate(title) {
-      currentItem = title;
-      content.innerHTML = dataPageHTML(title);
-      highlightCurrentCategory();
-    }
+    // Quick links: jump straight to any page.
+    initQuickLinks(e => goToItem(iaManager(e.managerId), e.item));
 
     // Landing matches the Figma A default: Configuration selected, Warehouse
     // Setup as the current category, and the "Areas" search page in content.
-    selectManager("configuration");
-    navigate("Areas");
+    goToItem(iaManager("configuration"), "Areas");
   </script>
 </body>
 </html>

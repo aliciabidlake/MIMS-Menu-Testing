@@ -180,6 +180,9 @@
     drawerScrim.addEventListener("click", closeDrawer);
     document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
 
+    // Quick links: jump straight to any page (also sets the local rail).
+    initQuickLinks(e => selectItem(iaManager(e.managerId), e.item));
+
     /* ---------- landing ----------
        Match the Figma default state: Configuration Manager rail with "Areas"
        selected, rather than an empty placeholder. */

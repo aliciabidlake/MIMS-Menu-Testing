@@ -106,6 +106,14 @@
     }
 
     function navigate(title) { content.innerHTML = dataPageHTML(title); }
+
+    // Quick links: grouped items open in the modal, tab pages navigate.
+    initQuickLinks(e => {
+      const m = iaManager(e.managerId);
+      if (m.type === "tabs") navigate(e.item);
+      else openModal(m, e.category, e.item);
+    });
+
     // Landing matches the Figma B default: the "Areas" search page.
     content.innerHTML = dataPageHTML("Areas");
   </script>

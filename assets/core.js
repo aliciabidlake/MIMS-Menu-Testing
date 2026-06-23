@@ -78,12 +78,14 @@ function dataPageHTML(title, opts) {
   }).join("");
   const ths = columns.map(c => `<div class="data-th">${escapeHTML(c)}</div>`).join("");
   return `<div class="data-page">
-      <h1 class="data-title">${escapeHTML(title)}</h1>
-      <div class="data-subtitle">${escapeHTML(subtitle)}</div>
-      <div class="filter-bar">
-        ${fields}
-        <button class="btn btn-text">Reset</button>
-        <button class="btn btn-primary">Search</button>
+      <div class="data-card">
+        <h1 class="data-title">${escapeHTML(title)}</h1>
+        <div class="data-subtitle">${escapeHTML(subtitle)}</div>
+        <div class="filter-bar">
+          ${fields}
+          <button class="btn btn-text">Reset</button>
+          <button class="btn btn-primary">Search</button>
+        </div>
       </div>
       <div class="data-table">
         <div class="data-thead">${ths}</div>
@@ -169,6 +171,93 @@ function headerHTML(opts) {
       <nav class="mims-nav" id="mims-nav"></nav>
       ${headerRightHTML()}
     </header>`;
+}
+
+/* ---- Quick links search --------------------------------------------------
+   Flattens the IA into a searchable index and wires the header "Quick links"
+   field to a results dropdown. Each prototype passes an onSelect callback that
+   navigates in its own way (A: goToItem, B: modal/navigate, C: selectItem). */
+function buildSearchIndex() {
+  const out = [];
+  MIMS_IA.managers.forEach(m => {
+    const managerName = m.drawerName || m.name;
+    if (m.type === "tabs") {
+      m.tabs.forEach(tab => out.push({ managerId: m.id, managerName, category: null, item: tab }));
+    } else {
+      m.categories.forEach(cat => cat.items.forEach(item =>
+        out.push({ managerId: m.id, managerName, category: cat.name, item })));
+    }
+  });
+  return out;
+}
+
+function qlHighlight(text, q) {
+  const i = text.toLowerCase().indexOf(q);
+  if (i < 0) return escapeHTML(text);
+  return escapeHTML(text.slice(0, i)) + "<mark>" + escapeHTML(text.slice(i, i + q.length)) + "</mark>" + escapeHTML(text.slice(i + q.length));
+}
+
+function initQuickLinks(onSelect) {
+  const box = document.querySelector(".mims-search");
+  if (!box) return;
+  const input = box.querySelector("input");
+  const index = buildSearchIndex();
+
+  const panel = document.createElement("div");
+  panel.className = "quicklinks-results";
+  box.appendChild(panel);
+
+  let results = [], activeIdx = -1;
+
+  function syncActive(items) {
+    items.forEach((it, i) => it.classList.toggle("is-active", i === activeIdx));
+    if (items[activeIdx]) items[activeIdx].scrollIntoView({ block: "nearest" });
+  }
+
+  function render(raw) {
+    const q = raw.trim().toLowerCase();
+    panel.innerHTML = "";
+    activeIdx = -1;
+    if (!q) { panel.classList.remove("is-open"); return; }
+    results = index.filter(e =>
+      e.item.toLowerCase().includes(q) ||
+      (e.category && e.category.toLowerCase().includes(q)) ||
+      e.managerName.toLowerCase().includes(q)
+    ).slice(0, 12);
+    if (!results.length) {
+      panel.innerHTML = `<div class="quicklinks-empty">No matches for &ldquo;${escapeHTML(raw.trim())}&rdquo;</div>`;
+      panel.classList.add("is-open");
+      return;
+    }
+    results.forEach(e => {
+      const crumb = e.category ? `${e.managerName} › ${e.category}` : e.managerName;
+      const b = document.createElement("button");
+      b.className = "quicklinks-item";
+      b.innerHTML = `<span class="ql-item">${qlHighlight(e.item, q)}</span><span class="ql-crumb">${escapeHTML(crumb)}</span>`;
+      b.addEventListener("mousedown", ev => { ev.preventDefault(); choose(e); });
+      panel.appendChild(b);
+    });
+    panel.classList.add("is-open");
+  }
+
+  function choose(e) {
+    input.value = "";
+    panel.classList.remove("is-open");
+    input.blur();
+    onSelect(e);
+  }
+
+  input.addEventListener("input", () => render(input.value));
+  input.addEventListener("focus", () => { if (input.value.trim()) render(input.value); });
+  input.addEventListener("keydown", ev => {
+    if (!panel.classList.contains("is-open")) return;
+    const items = [...panel.querySelectorAll(".quicklinks-item")];
+    if (ev.key === "ArrowDown") { ev.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); syncActive(items); }
+    else if (ev.key === "ArrowUp") { ev.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); syncActive(items); }
+    else if (ev.key === "Enter") { ev.preventDefault(); const e = results[activeIdx] || results[0]; if (e) choose(e); }
+    else if (ev.key === "Escape") { panel.classList.remove("is-open"); }
+  });
+  document.addEventListener("click", ev => { if (!box.contains(ev.target)) panel.classList.remove("is-open"); });
 }
 
 /* ---- Microsoft Clarity ---------------------------------------------------- */
