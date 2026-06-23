@@ -38,6 +38,7 @@
 
     document.getElementById("chrome").innerHTML = headerHTML({ hamburger: true });
     document.getElementById("footer").innerHTML = footerHTML();
+    addExitToMenu();
     document.querySelector(".mims-hamburger").style.display = "inline-flex";
 
     const sidenav = document.getElementById("sidenav");
@@ -91,6 +92,9 @@
     function selectItem(manager, item) {
       currentManagerId = manager.id;
       currentItem = item;
+      clarityEvent("navigate");
+      clarityTag("current_manager", manager.drawerName);
+      clarityTag("current_page", item);
       renderLocalRail(manager, item);
       content.innerHTML = stubHTML(item);
       closeDrawer();
@@ -159,6 +163,7 @@
 
     function showFlyout(anchor, manager, cat) {
       cancelHide();
+      clarityEvent("open_flyout");
       drawer.querySelectorAll(".drawer-cat").forEach(x => x.classList.remove("is-hover"));
       anchor.classList.add("is-hover");
       flyout.innerHTML = "";
@@ -186,7 +191,7 @@
     drawer.addEventListener("mouseleave", scheduleHide);
     drawer.addEventListener("mouseenter", cancelHide);
 
-    function openDrawer() { buildDrawer(); drawer.style.display = "block"; drawer.classList.add("is-open"); drawerScrim.classList.add("is-open"); }
+    function openDrawer() { clarityEvent("open_drawer"); buildDrawer(); drawer.style.display = "block"; drawer.classList.add("is-open"); drawerScrim.classList.add("is-open"); }
     function closeDrawer() { drawer.classList.remove("is-open"); drawer.style.display = "none"; drawerScrim.classList.remove("is-open"); hideFlyout(); }
     document.querySelector(".mims-hamburger").addEventListener("click", () => {
       drawerScrim.classList.contains("is-open") ? closeDrawer() : openDrawer();

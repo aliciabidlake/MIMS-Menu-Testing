@@ -27,6 +27,7 @@
 
     document.getElementById("chrome").innerHTML = headerHTML();
     document.getElementById("footer").innerHTML = footerHTML();
+    addExitToMenu();
 
     const nav = document.getElementById("mims-nav");
     const content = document.getElementById("content");
@@ -87,6 +88,7 @@
     nav.appendChild(managers);
 
     function openMega(wrap, btn, mega) {
+      if (openWrap !== mega) clarityEvent("open_menu");
       if (openWrap && openWrap !== mega) closeMega();
       btn.classList.add("is-active");
       mega.style.left = "0"; mega.style.right = "auto";
@@ -105,7 +107,11 @@
       }
     }
 
-    function navigate(title) { content.innerHTML = stubHTML(title); }
+    function navigate(title) {
+      clarityEvent("navigate");
+      clarityTag("current_page", title);
+      content.innerHTML = stubHTML(title);
+    }
 
     // Quick links: grouped items open in the modal, tab pages navigate.
     initQuickLinks(e => {

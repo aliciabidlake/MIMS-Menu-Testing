@@ -132,6 +132,8 @@ function buildModal() {
   return scrim;
 }
 function openModal(manager, activeCat, activeItem) {
+  clarityEvent("open_modal");
+  clarityTag("current_manager", manager.name);
   const scrim = document.getElementById("modal-scrim") || buildModal();
   document.getElementById("modal-title").textContent = manager.drawerName;
   const rail = document.getElementById("modal-rail");
@@ -150,6 +152,8 @@ function openModal(manager, activeCat, activeItem) {
   scrim.classList.add("is-open");
 }
 function setModalContent(manager, cat, item, rail, btn) {
+  clarityEvent("navigate");
+  clarityTag("current_page", item);
   document.getElementById("modal-content").innerHTML = stubHTML(item);
   if (rail && btn) {
     rail.querySelectorAll(".menu-item").forEach(x => x.classList.remove("is-active"));
@@ -262,9 +266,12 @@ function initQuickLinks(onSelect) {
 
 /* ---- Microsoft Clarity ---------------------------------------------------- */
 /* Each prototype calls this with the shared project ID and its variant letter.
-   The variant is set as a Clarity custom tag ("variant" = A/B/C) so sessions,
-   heatmaps and recordings can be filtered per prototype in one project. Leave
-   the id blank to disable (e.g. local dev). */
+   Sets up everything a moderated UX test needs in one Clarity project:
+     - variant tag (A/B/C) so recordings/heatmaps split per prototype
+     - participant grouping via ?p=<name> in the URL (identify + tag), so all
+       sessions from one tester group together and are searchable by name
+     - upgrade() so moderated sessions are always kept (never sampled out)
+   Leave the id blank to disable (e.g. local dev). */
 function injectClarity(id, variant) {
   if (!id || id === "REPLACE_ME") return;
   (function (c, l, a, r, i, t, y) {
@@ -272,5 +279,31 @@ function injectClarity(id, variant) {
     t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
     y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
   })(window, document, "clarity", "script", id);
+
   if (variant) window.clarity("set", "variant", variant);
+
+  var q = new URLSearchParams(location.search);
+  var participant = q.get("p") || q.get("participant");
+  if (participant) {
+    // friendly name (4th arg) shows in the dashboard; custom-id is hashed.
+    window.clarity("identify", participant, undefined, undefined, participant);
+    window.clarity("set", "participant", participant);
+  }
+  window.clarity("upgrade", "ux-test");
+}
+
+/* Lightweight wrappers — no-op until the Clarity tag has loaded. */
+function clarityTag(key, val) { if (window.clarity) window.clarity("set", key, String(val)); }
+function clarityEvent(name) { if (window.clarity) window.clarity("event", name); }
+
+/* Test-harness affordance (NOT part of the MIMS UI): a fixed pill that returns
+   the tester to the version menu, carrying ?p= so the session stays grouped. */
+function addExitToMenu() {
+  var a = document.createElement("a");
+  a.className = "ux-exit";
+  var p = new URLSearchParams(location.search).get("p") || new URLSearchParams(location.search).get("participant");
+  a.href = "../index.html" + (p ? "?p=" + encodeURIComponent(p) : "");
+  a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Exit to menu</span>';
+  a.addEventListener("click", function () { clarityEvent("exit_to_menu"); });
+  document.body.appendChild(a);
 }
