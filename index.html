@@ -3,15 +3,215 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>MIMS Menu Testing</title>
+		<title>MIMS Usability Study</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+		<style>
+			.mm-root {
+				--blue: #1477c6;
+				--blue-dark: #0f5a98;
+				--seagull: #74abe3;
+				--seagull-tint: #eaf3fb;
+				--ink: #010103;
+				--muted: #6b7785;
+				--line: #e6eaf0;
+				--bg: #f6f8fb;
+				--card: #ffffff;
+				--font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+			}
+
+			.mm-root * {
+				box-sizing: border-box;
+			}
+
+			.mm-root {
+				margin: 0;
+				font-family: var(--font);
+				color: var(--ink);
+				background: var(--bg);
+				min-height: 100vh;
+				display: flex;
+				flex-direction: column;
+				-webkit-font-smoothing: antialiased;
+			}
+
+			.mm-bar {
+				height: 4px;
+				background: linear-gradient(90deg, var(--blue) 0%, var(--seagull) 100%);
+			}
+
+			.mm-wrap {
+				flex: 1;
+				width: 100%;
+				max-width: 880px;
+				margin: 0 auto;
+				padding: 72px 28px 56px;
+				text-align: center;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+
+			.mm-logo {
+				height: 36px;
+				width: auto;
+				margin-bottom: 48px;
+			}
+
+			.mm-title {
+				font-size: clamp(28px, 4.4vw, 40px);
+				font-weight: 800;
+				letter-spacing: -0.8px;
+				margin: 0 0 12px;
+			}
+
+			.mm-sub {
+				font-size: 16px;
+				line-height: 1.6;
+				color: var(--muted);
+				margin: 0 0 48px;
+				max-width: 46ch;
+			}
+
+			.mm-grid {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 20px;
+				width: 100%;
+			}
+
+			.mm-card {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				background: var(--card);
+				border: 1px solid var(--line);
+				border-radius: 16px;
+				padding: 34px 24px 30px;
+				text-decoration: none;
+				color: inherit;
+				transition:
+					transform 0.2s ease,
+					box-shadow 0.2s ease,
+					border-color 0.2s ease;
+			}
+
+			.mm-card:hover,
+			.mm-card:focus-visible {
+				transform: translateY(-6px);
+				border-color: transparent;
+				box-shadow: 0 18px 40px -16px rgba(20, 119, 198, 0.45);
+				outline: none;
+			}
+			.mm-card:focus-visible {
+				box-shadow: 0 0 0 3px rgba(20, 119, 198, 0.5);
+			}
+
+			.mm-badge {
+				width: 64px;
+				height: 64px;
+				border-radius: 50%;
+				background: var(--seagull-tint);
+				color: var(--blue);
+				font-size: 28px;
+				font-weight: 800;
+				display: grid;
+				place-items: center;
+				margin-bottom: 18px;
+				transition:
+					background 0.2s ease,
+					color 0.2s ease,
+					transform 0.2s ease;
+			}
+			.mm-card:hover .mm-badge,
+			.mm-card:focus-visible .mm-badge {
+				background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+				color: #fff;
+				transform: scale(1.08);
+			}
+
+			.mm-card h2 {
+				font-size: 16px;
+				font-weight: 600;
+				margin: 0;
+				letter-spacing: 0.2px;
+			}
+
+			.mm-foot {
+				max-width: 880px;
+				width: 100%;
+				margin: 0 auto;
+				padding: 24px 28px;
+				border-top: 1px solid var(--line);
+				font-size: 12px;
+				color: var(--muted);
+				text-align: center;
+			}
+
+			@media (max-width: 720px) {
+				.mm-grid {
+					grid-template-columns: 1fr;
+				}
+				.mm-wrap {
+					padding: 48px 22px 40px;
+				}
+			}
+
+			@media (prefers-reduced-motion: reduce) {
+				.mm-card,
+				.mm-badge {
+					transition: none;
+				}
+			}
+		</style>
 	</head>
-	<body>
-		<h1>HELLO WELCOME TO MIMS Menu Testing</h1>
-		<p>Select a test page:</p>
-		<ul>
-			<li><a href="test-1/index.html">Test Page 1</a></li>
-			<li><a href="test-2/index.html">Test Page 2</a></li>
-			<li><a href="test-3/index.html">Test Page 3</a></li>
-		</ul>
+	<body class="mm-root">
+		<div class="mm-bar"></div>
+
+		<main class="mm-wrap">
+			<svg class="mm-logo" viewBox="6 81 181 34" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mainfreight">
+				<g fill-rule="evenodd" clip-rule="evenodd">
+					<path
+						fill="#fff"
+						d="M20.062 82.529h6.495l.382 5.349 5.253-5.349h8.023l3.247 2.197 1.528-2.197h5.731l2.961 5.922 3.152-5.827h5.445l-3.057 7.833 4.011-7.833h5.254l.859 3.534 2.388-3.534h5.922l.095 1.528.86-1.528 10.506-.095-1.146 4.107 2.101-4.012s7.737-.095 7.833-.095c4.488 0 4.012 2.674 3.629 4.011-.381 1.242 0 2.006 0 2.006l3.152-5.922h10.889l.67.86.477-.955h5.635l-1.623 3.438s-1.146 2.388-.668 1.624c3.246-5.635 9.074-5.54 10.889-5.54 1.527 0 4.775 0 6.494 2.77.574 1.051.096 2.102.096 2.102l2.197-4.394h6.209l.668 3.629 1.91-3.629h5.922l.668 1.433.67-1.433h20.439l-2.291 4.775h-6.305l-6.877 13.372H10.796l9.266-18.147z"
+					/>
+					<path
+						fill="#3382c3"
+						d="M176.229 82.529l8.023 8.978-2.77 4.871h-6.209l-7.355 14.327H20.825L8.504 100.486h7.928l2.674-4.777.382 4.777h3.439l4.107-4.49-1.72 4.49h135.25l6.973-13.373h6.401l2.291-4.584z"
+					/>
+					<path
+						fill="#3382c3"
+						d="M158.846 87.113l-5.062 9.265H34.389l5.827-13.849 3.438 1.91-7.45 10.506h5.062l1.146-1.528h2.101v1.528h4.776l1.433-12.417 4.872 2.197-5.444 10.22h5.54l6.59-12.321.477.86-5.922 11.461h4.967l1.911-3.534.859 3.534h6.496l6.59-12.321.286 1.05-5.922 11.271h5.158l2.293-4.107h5.253l1.91-3.629h-5.253l.478-1.051h5.253l2.006-3.629.573.859-6.208 11.557h5.922l2.388-4.489.478 4.489h5.159l-.383-4.584s4.012-.287 4.395-3.821c.381-3.248-1.434-3.725-1.434-3.725s2.482.287 2.961 3.152L98.1 94.945h10.793l2.389-4.203h-4.012l.477-1.05h4.107l1.338-2.483h-4.299l.383-.956h4.393l1.91-3.725.67.859-5.922 11.557h5.443l6.59-12.321 1.051 1.337s-4.393 3.534-4.393 7.641c0 3.725 2.293 4.107 5.252 4.107 2.102 0 4.395-1.337 5.158-1.91a17.864 17.864 0 0 1-.764 1.146h3.344l3.916-7.068h-8.691l-.957 2.197h1.625s-.574 1.528-2.102 1.528c-1.146 0-.955-2.197.287-4.203 1.051-1.72 2.195-2.483 3.057-2.483.859 0 .955 1.91.955 1.91h6.303s.383-3.534-1.91-4.298c2.293.095 3.725 2.96 3.631 3.343l-4.873 9.074h6.209l2.389-4.203h2.482l-2.291 4.203h6.303l6.113-12.417.668 1.337-1.623 3.248h5.347v.001z"
+					/>
+					<path
+						fill="#3382c3"
+						d="M93.226 86.922l.859-1.337s1.624-.287 1.337.478-1.05.859-2.196.859zM68.488 82.624l.763 3.629 1.243-1.91-2.006-1.719zM45.086 88.546l-1.241 2.006h1.05l.191-2.006zM26.556 82.529v5.635l3.726-3.725-3.726-1.91z"
+					/>
+					<path fill="#d46f3d" d="M8.504 100.486h3.247l10.125-17.957h-3.248L8.504 100.486z" />
+					<path fill="#3382c3" d="M143.85 86.253h2.769l.955-1.91-1.623-1.814-2.101 3.724z" />
+				</g>
+			</svg>
+
+			<h1 class="mm-title">Welcome to MIMS Menu Testing</h1>
+			<p class="mm-sub">Pick a version to begin.</p>
+
+			<nav class="mm-grid" aria-label="Test versions">
+				<a class="mm-card" href="test-1/index.html">
+					<div class="mm-badge">A</div>
+					<h2>Version A</h2>
+				</a>
+				<a class="mm-card" href="test-2/index.html">
+					<div class="mm-badge">B</div>
+					<h2>Version B</h2>
+				</a>
+				<a class="mm-card" href="test-3/index.html">
+					<div class="mm-badge">C</div>
+					<h2>Version C</h2>
+				</a>
+			</nav>
+		</main>
+
+		<footer class="mm-foot">&copy; Mainfreight 2026. MIMS</footer>
 	</body>
 </html>
