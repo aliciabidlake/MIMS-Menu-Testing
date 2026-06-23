@@ -1,13 +1,112 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Test Page 2</title>
-	</head>
-	<body>
-		<h1>Test Page 2</h1>
-		<p>This is the second test page.</p>
-		<p><a href="../index.html">Back to home</a></p>
-	</body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MIMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="chrome"></div>
+  <div class="mims-body">
+    <main class="mims-main">
+      <div class="mims-content" id="content"></div>
+    </main>
+  </div>
+  <div id="footer"></div>
+
+  <script src="../assets/ia.js"></script>
+  <script src="../assets/core.js"></script>
+  <script>
+    /* Prototype B — top nav + hover mega menu; config items open in a modal */
+    window.CLARITY_ID = "REPLACE_ME"; // B's Clarity project id
+    injectClarity(window.CLARITY_ID);
+
+    document.getElementById("chrome").innerHTML = headerHTML();
+    document.getElementById("footer").innerHTML = footerHTML();
+
+    const nav = document.getElementById("mims-nav");
+    const content = document.getElementById("content");
+    let hoverTimer = null;
+    let openWrap = null;
+
+    const managers = document.createElement("div");
+    managers.className = "mims-managers";
+
+    MIMS_IA.managers.forEach(m => {
+      const wrap = document.createElement("div");
+      wrap.style.position = "relative";
+      wrap.style.height = "100%";
+
+      const b = document.createElement("button");
+      b.className = "mims-manager";
+      b.innerHTML = `${escapeHTML(m.name)} ${SVG.chevDown}`;
+      wrap.appendChild(b);
+
+      const mega = document.createElement("div");
+      mega.className = "menu-surface mega";
+      if (m.type === "grouped") {
+        m.categories.forEach(cat => {
+          const g = document.createElement("div");
+          g.className = "mega-group";
+          g.innerHTML = `<div class="menu-cat-label">${escapeHTML(cat.name)}</div>`;
+          cat.items.forEach(item => {
+            const it = document.createElement("button");
+            it.className = "menu-item";
+            it.textContent = item;
+            it.addEventListener("click", () => { closeMega(); openModal(m, cat.name, item); });
+            g.appendChild(it);
+          });
+          mega.appendChild(g);
+        });
+      } else {
+        mega.style.columns = "1";
+        mega.style.minWidth = "260px";
+        m.tabs.forEach(tab => {
+          const it = document.createElement("button");
+          it.className = "menu-item";
+          it.textContent = tab;
+          it.addEventListener("click", () => { closeMega(); navigate(tab); });
+          mega.appendChild(it);
+        });
+      }
+      wrap.appendChild(mega);
+
+      const open = () => { clearTimeout(hoverTimer); openMega(wrap, b, mega); };
+      const scheduleClose = () => { hoverTimer = setTimeout(closeMega, 140); };
+      b.addEventListener("mouseenter", open);
+      b.addEventListener("click", open);
+      wrap.addEventListener("mouseenter", () => clearTimeout(hoverTimer));
+      wrap.addEventListener("mouseleave", scheduleClose);
+
+      managers.appendChild(wrap);
+    });
+    nav.appendChild(managers);
+
+    function openMega(wrap, btn, mega) {
+      if (openWrap && openWrap !== mega) closeMega();
+      btn.classList.add("is-active");
+      mega.style.left = "0"; mega.style.right = "auto";
+      mega.classList.add("is-open");
+      // flip to right-aligned if it would overflow the viewport
+      const r = mega.getBoundingClientRect();
+      if (r.right > window.innerWidth - 8) { mega.style.left = "auto"; mega.style.right = "0"; }
+      openWrap = mega;
+      openWrap._btn = btn;
+    }
+    function closeMega() {
+      if (openWrap) {
+        openWrap.classList.remove("is-open");
+        if (openWrap._btn) openWrap._btn.classList.remove("is-active");
+        openWrap = null;
+      }
+    }
+
+    function navigate(title) { content.innerHTML = stubHTML(title); }
+    content.innerHTML = homeHTML();
+  </script>
+</body>
 </html>
