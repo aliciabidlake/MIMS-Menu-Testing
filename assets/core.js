@@ -48,7 +48,7 @@ function headerRightHTML() {
 }
 function footerHTML() {
   return `<footer class="mims-footer">
-      <span class="copyright">© Copyright Mainfreight 2025</span>
+      <span class="copyright">© Copyright Mainfreight 2026</span>
       <span class="links">
         <a href="#" onclick="return false">Privacy Policy</a>
         <a href="#" onclick="return false">Cookies Statement</a>
@@ -150,7 +150,7 @@ function openModal(manager, activeCat, activeItem) {
   scrim.classList.add("is-open");
 }
 function setModalContent(manager, cat, item, rail, btn) {
-  document.getElementById("modal-content").innerHTML = dataPageHTML(item);
+  document.getElementById("modal-content").innerHTML = stubHTML(item);
   if (rail && btn) {
     rail.querySelectorAll(".menu-item").forEach(x => x.classList.remove("is-active"));
     btn.classList.add("is-active");
@@ -261,14 +261,16 @@ function initQuickLinks(onSelect) {
 }
 
 /* ---- Microsoft Clarity ---------------------------------------------------- */
-/* Each prototype sets window.CLARITY_ID before calling this. Leave blank to
-   disable (e.g. local dev). Three separate project IDs let A/B/C be compared
-   independently. */
-function injectClarity(id) {
+/* Each prototype calls this with the shared project ID and its variant letter.
+   The variant is set as a Clarity custom tag ("variant" = A/B/C) so sessions,
+   heatmaps and recordings can be filtered per prototype in one project. Leave
+   the id blank to disable (e.g. local dev). */
+function injectClarity(id, variant) {
   if (!id || id === "REPLACE_ME") return;
   (function (c, l, a, r, i, t, y) {
     c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
     t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
     y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
   })(window, document, "clarity", "script", id);
+  if (variant) window.clarity("set", "variant", variant);
 }

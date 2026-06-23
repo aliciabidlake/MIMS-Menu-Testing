@@ -22,8 +22,8 @@
   <script src="../assets/core.js"></script>
   <script>
     /* Prototype B — top nav + hover mega menu; config items open in a modal */
-    window.CLARITY_ID = "REPLACE_ME"; // B's Clarity project id
-    injectClarity(window.CLARITY_ID);
+    window.CLARITY_ID = "xbir7mlhe6"; // shared Clarity project
+    injectClarity(window.CLARITY_ID, "B");
 
     document.getElementById("chrome").innerHTML = headerHTML();
     document.getElementById("footer").innerHTML = footerHTML();
@@ -105,7 +105,7 @@
       }
     }
 
-    function navigate(title) { content.innerHTML = dataPageHTML(title); }
+    function navigate(title) { content.innerHTML = stubHTML(title); }
 
     // Quick links: grouped items open in the modal, tab pages navigate.
     initQuickLinks(e => {
@@ -115,7 +115,7 @@
     });
 
     // Landing matches the Figma B default: the "Areas" search page.
-    content.innerHTML = dataPageHTML("Areas");
+    content.innerHTML = stubHTML("Areas");
   </script>
 </body>
 </html>
