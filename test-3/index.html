@@ -1,13 +1,168 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Test Page 3</title>
-	</head>
-	<body>
-		<h1>Test Page 3</h1>
-		<p>This is the third test page.</p>
-		<p><a href="../index.html">Back to home</a></p>
-	</body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MIMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="chrome"></div>
+  <div class="mims-body">
+    <aside class="sidenav" id="sidenav"></aside>
+    <main class="mims-main">
+      <div class="mims-content" id="content"></div>
+    </main>
+  </div>
+  <div id="footer"></div>
+
+  <!-- overarching drawer -->
+  <div class="drawer-scrim" id="drawer-scrim"></div>
+  <nav class="drawer" id="drawer" style="display:none" aria-label="All managers"></nav>
+  <div class="menu-surface flyout" id="flyout"></div>
+
+  <script src="../assets/ia.js"></script>
+  <script src="../assets/core.js"></script>
+  <script>
+    /* Prototype C — side nav: local contextual rail + hamburger overarching
+       drawer (all managers, click-expand, hover-flyout). Full-page stubs. */
+    window.CLARITY_ID = "REPLACE_ME"; // C's Clarity project id
+    injectClarity(window.CLARITY_ID);
+
+    document.getElementById("chrome").innerHTML = headerHTML({ hamburger: true });
+    document.getElementById("footer").innerHTML = footerHTML();
+    document.querySelector(".mims-hamburger").style.display = "inline-flex";
+
+    const sidenav = document.getElementById("sidenav");
+    const content = document.getElementById("content");
+    const drawer = document.getElementById("drawer");
+    const drawerScrim = document.getElementById("drawer-scrim");
+    const flyout = document.getElementById("flyout");
+    let currentManagerId = null;
+
+    /* ---------- local contextual rail ---------- */
+    function renderLocalRail(manager, activeItem) {
+      sidenav.innerHTML = "";
+      const title = document.createElement("div");
+      title.className = "sidenav-title";
+      title.textContent = manager.drawerName;
+      sidenav.appendChild(title);
+
+      if (manager.type === "tabs") {
+        manager.tabs.forEach(tab => sidenav.appendChild(localItem(tab, manager, activeItem)));
+        return;
+      }
+      manager.categories.forEach((cat, idx) => {
+        const catBtn = document.createElement("button");
+        catBtn.className = "sidenav-cat";
+        catBtn.innerHTML = `<span>${escapeHTML(cat.name)}</span> ${SVG.chevDown}`;
+        const items = document.createElement("div");
+        items.className = "sidenav-items";
+        const hasActive = cat.items.includes(activeItem);
+        if (idx === 0 || hasActive) { catBtn.classList.add("is-open"); items.classList.add("is-open"); }
+        cat.items.forEach(item => items.appendChild(localItem(item, manager, activeItem)));
+        catBtn.addEventListener("click", () => {
+          catBtn.classList.toggle("is-open");
+          items.classList.toggle("is-open");
+        });
+        sidenav.appendChild(catBtn);
+        sidenav.appendChild(items);
+      });
+    }
+    function localItem(label, manager, activeItem) {
+      const b = document.createElement("button");
+      b.className = "sidenav-item" + (label === activeItem ? " is-active" : "");
+      b.textContent = label;
+      b.addEventListener("click", () => selectItem(manager, label));
+      return b;
+    }
+
+    /* ---------- navigation ---------- */
+    function selectItem(manager, item) {
+      currentManagerId = manager.id;
+      renderLocalRail(manager, item);
+      content.innerHTML = stubHTML(item);
+      closeDrawer();
+    }
+
+    /* ---------- overarching drawer ---------- */
+    function buildDrawer() {
+      drawer.innerHTML = "";
+      MIMS_IA.managers.forEach(m => {
+        const mBtn = document.createElement("button");
+        mBtn.className = "drawer-manager" + (m.id === currentManagerId ? " is-active" : "");
+        mBtn.innerHTML = `${MANAGER_ICON[m.id] || ""}<span>${escapeHTML(m.drawerName)}</span> ${SVG.chevDown}`;
+        const cats = document.createElement("div");
+        cats.className = "drawer-cats";
+
+        if (m.type === "tabs") {
+          m.tabs.forEach(tab => {
+            const t = document.createElement("button");
+            t.className = "drawer-cat";
+            t.innerHTML = `<span class="dot"></span><span>${escapeHTML(tab)}</span>`;
+            t.addEventListener("click", e => { e.stopPropagation(); selectItem(m, tab); });
+            cats.appendChild(t);
+          });
+        } else {
+          m.categories.forEach(cat => {
+            const c = document.createElement("button");
+            c.className = "drawer-cat";
+            c.innerHTML = `<span class="dot"></span><span>${escapeHTML(cat.name)}</span> ${SVG.chevRight}`;
+            c.addEventListener("mouseenter", () => showFlyout(c, m, cat));
+            c.addEventListener("click", e => { e.stopPropagation(); showFlyout(c, m, cat); });
+            cats.appendChild(c);
+          });
+        }
+
+        mBtn.addEventListener("click", () => {
+          const open = mBtn.classList.toggle("is-open");
+          cats.classList.toggle("is-open", open);
+          hideFlyout();
+        });
+        if (m.id === currentManagerId) { mBtn.classList.add("is-open"); cats.classList.add("is-open"); }
+
+        drawer.appendChild(mBtn);
+        drawer.appendChild(cats);
+      });
+    }
+
+    function showFlyout(anchor, manager, cat) {
+      drawer.querySelectorAll(".drawer-cat").forEach(x => x.classList.remove("is-hover"));
+      anchor.classList.add("is-hover");
+      flyout.innerHTML = "";
+      cat.items.forEach(item => {
+        const b = document.createElement("button");
+        b.className = "menu-item";
+        b.textContent = item;
+        b.addEventListener("click", () => selectItem(manager, item));
+        flyout.appendChild(b);
+      });
+      const r = anchor.getBoundingClientRect();
+      flyout.style.left = (drawer.getBoundingClientRect().right - 1) + "px";
+      flyout.style.top = r.top + "px";
+      flyout.classList.add("is-open");
+    }
+    function hideFlyout() {
+      flyout.classList.remove("is-open");
+      drawer.querySelectorAll(".drawer-cat").forEach(x => x.classList.remove("is-hover"));
+    }
+    flyout.addEventListener("mouseleave", hideFlyout);
+    drawer.addEventListener("mouseleave", e => { if (e.relatedTarget !== flyout) hideFlyout(); });
+
+    function openDrawer() { buildDrawer(); drawer.style.display = "block"; drawer.classList.add("is-open"); drawerScrim.classList.add("is-open"); }
+    function closeDrawer() { drawer.classList.remove("is-open"); drawer.style.display = "none"; drawerScrim.classList.remove("is-open"); hideFlyout(); }
+    document.querySelector(".mims-hamburger").addEventListener("click", () => {
+      drawerScrim.classList.contains("is-open") ? closeDrawer() : openDrawer();
+    });
+    drawerScrim.addEventListener("click", closeDrawer);
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+
+    /* ---------- landing ---------- */
+    sidenav.innerHTML = `<div class="sidenav-title" style="color:var(--text-secondary);font-size:var(--fs-14);font-weight:400;line-height:1.5">Open the <strong>menu</strong> (top-left) to choose a manager.</div>`;
+    content.innerHTML = homeHTML();
+  </script>
+</body>
 </html>

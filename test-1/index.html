@@ -1,13 +1,134 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Test Page 1</title>
-	</head>
-	<body>
-		<h1>Test Page 1</h1>
-		<p>This is the first test page.</p>
-		<p><a href="../index.html">Back to home</a></p>
-	</body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MIMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="chrome"></div>
+  <div class="subbar" id="subbar" style="display:none"></div>
+  <div class="mims-body">
+    <main class="mims-main">
+      <div class="mims-content" id="content"></div>
+    </main>
+  </div>
+  <div id="footer"></div>
+
+  <script src="../assets/ia.js"></script>
+  <script src="../assets/core.js"></script>
+  <script>
+    /* Prototype A — top nav + persistent subcategory bar (dropdowns), full-page stubs */
+    window.CLARITY_ID = "REPLACE_ME"; // A's Clarity project id
+    injectClarity(window.CLARITY_ID);
+
+    document.getElementById("chrome").innerHTML = headerHTML();
+    document.getElementById("footer").innerHTML = footerHTML();
+
+    const nav = document.getElementById("mims-nav");
+    const subbar = document.getElementById("subbar");
+    const content = document.getElementById("content");
+    let activeManagerId = null;
+    let openMenuEl = null;
+
+    // top-nav managers
+    const managers = document.createElement("div");
+    managers.className = "mims-managers";
+    MIMS_IA.managers.forEach(m => {
+      const b = document.createElement("button");
+      b.className = "mims-manager";
+      b.dataset.id = m.id;
+      b.innerHTML = `${escapeHTML(m.name)} ${SVG.chevDown}`;
+      b.addEventListener("click", () => selectManager(m.id));
+      managers.appendChild(b);
+    });
+    nav.appendChild(managers);
+
+    function selectManager(id) {
+      activeManagerId = id;
+      closeDropdown();
+      [...managers.children].forEach(c => c.classList.toggle("is-active", c.dataset.id === id));
+      renderSubbar(iaManager(id));
+    }
+
+    function renderSubbar(m) {
+      subbar.innerHTML = "";
+      subbar.style.display = "flex";
+      subbar.classList.toggle("is-tabs", m.type === "tabs");
+
+      if (m.type === "tabs") {
+        m.tabs.forEach((tab, i) => {
+          const b = document.createElement("button");
+          b.className = "subbar-item" + (i === 0 ? "" : "");
+          b.textContent = tab;
+          b.addEventListener("click", () => {
+            [...subbar.children].forEach(c => c.classList.remove("is-active"));
+            b.classList.add("is-active");
+            navigate(tab);
+          });
+          subbar.appendChild(b);
+        });
+        // land on first tab
+        subbar.children[0].classList.add("is-active");
+        navigate(m.tabs[0]);
+        return;
+      }
+
+      m.categories.forEach(cat => {
+        const b = document.createElement("button");
+        b.className = "subbar-item";
+        b.innerHTML = `${escapeHTML(cat.name)} ${SVG.chevDown}`;
+        b.addEventListener("click", e => {
+          e.stopPropagation();
+          if (openMenuEl && openMenuEl._cat === cat.name) { closeDropdown(); return; }
+          openDropdown(b, cat);
+        });
+        subbar.appendChild(b);
+      });
+    }
+
+    function openDropdown(anchor, cat) {
+      closeDropdown();
+      anchor.classList.add("is-open");
+      const menu = document.createElement("div");
+      menu.className = "menu-surface";
+      menu._cat = cat.name;
+      menu.style.position = "absolute";
+      menu.style.zIndex = 50;
+      cat.items.forEach(item => {
+        const it = document.createElement("button");
+        it.className = "menu-item";
+        it.textContent = item;
+        it.addEventListener("click", () => { navigate(item); closeDropdown(); });
+        menu.appendChild(it);
+      });
+      document.body.appendChild(menu);
+      const r = anchor.getBoundingClientRect();
+      menu.style.left = r.left + "px";
+      menu.style.top = r.bottom + "px";
+      menu.style.minWidth = "220px";
+      openMenuEl = menu;
+      openMenuEl._anchor = anchor;
+    }
+    function closeDropdown() {
+      if (openMenuEl) {
+        if (openMenuEl._anchor) openMenuEl._anchor.classList.remove("is-open");
+        openMenuEl.remove();
+        openMenuEl = null;
+      }
+    }
+    document.addEventListener("click", e => {
+      if (openMenuEl && !openMenuEl.contains(e.target) && !openMenuEl._anchor.contains(e.target)) closeDropdown();
+    });
+
+    function navigate(title) { content.innerHTML = stubHTML(title); }
+
+    // landing
+    content.innerHTML = homeHTML();
+  </script>
+</body>
 </html>

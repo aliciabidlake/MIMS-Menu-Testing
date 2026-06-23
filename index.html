@@ -1,17 +1,31 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>MIMS Menu Testing</title>
-	</head>
-	<body>
-		<h1>HELLO WELCOME TO MIMS Menu Testing</h1>
-		<p>Select a test page:</p>
-		<ul>
-			<li><a href="test-1/index.html">Test Page 1</a></li>
-			<li><a href="test-2/index.html">Test Page 2</a></li>
-			<li><a href="test-3/index.html">Test Page 3</a></li>
-		</ul>
-	</body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MIMS Menu Testing — launcher</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: "Inter", system-ui, sans-serif; color: rgba(0,0,0,.87); max-width: 720px; margin: 48px auto; padding: 0 24px; }
+    h1 { font-weight: 500; }
+    .note { color: rgba(0,0,0,.6); font-size: 14px; background: #f5f7fa; border: 1px solid rgba(0,0,0,.12); border-radius: 8px; padding: 14px 16px; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 12px 0; padding: 16px; border: 1px solid rgba(0,0,0,.12); border-radius: 8px; }
+    a { color: #007cc4; font-weight: 500; font-size: 18px; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .desc { color: rgba(0,0,0,.6); font-size: 14px; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <h1>MIMS — Menu findability test</h1>
+  <p class="note"><strong>Internal launcher.</strong> Give testers the direct link to a single prototype below (not this page) so the navigation paradigm isn't revealed by the others.</p>
+  <ul>
+    <li><a href="test-1/index.html">Prototype 1</a>
+      <div class="desc">A — Top navigation + persistent subcategory bar (dropdowns); full-page destinations.</div></li>
+    <li><a href="test-2/index.html">Prototype 2</a>
+      <div class="desc">B — Top navigation + hover mega menu; config items open in a modal.</div></li>
+    <li><a href="test-3/index.html">Prototype 3</a>
+      <div class="desc">C — Side navigation: local rail + hamburger drawer (hover flyouts); full-page destinations.</div></li>
+  </ul>
+</body>
 </html>
